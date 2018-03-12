@@ -33,7 +33,21 @@ public class STWalker {
     private ArrayList<TierThreeObstacle> tierThreeList = new ArrayList<>();
     ArrayList<TierFour> tierFourList = new ArrayList<>();
 
+    private boolean tierFour = true;
+    private boolean tierThree = true;
+    private boolean tierTwo = true;
 
+    public void setTierFour(boolean tierFour) {
+        this.tierFour = tierFour;
+    }
+
+    public void setTierThree(boolean tierThree) {
+        this.tierThree = tierThree;
+    }
+
+    public void setTierTwo(boolean tierTwo) {
+        this.tierTwo = tierTwo;
+    }
 
     public STWalker(ClientContext ctx) {
         this.ctx = ctx;
@@ -371,53 +385,55 @@ public class STWalker {
 
         ComplexObstacle co = null;
 
-        for(ComplexObstacle c: obstacleList){
-            if(c.getStartTile().distanceTo(ctx.players.local().tile()) < 12 && c.getStartTile().matrix(ctx).reachable()){
-                if(c.getEndTile().distanceTo(d) < 12){
-                    if(c.getStartTile().matrix(ctx).reachable()){
-                        co = c;
-                        break;
-                    }
-                }
-            }else{
-                if(c.isReversible() && c.getEndTile().distanceTo(ctx.players.local().tile()) < 12 && c.getEndTile().matrix(ctx).reachable()){
-                    if(c.getStartTile().distanceTo(d) < 12){
-                        if(c.getEndTile().matrix(ctx).reachable()){
+        if(tierTwo) {
+            for (ComplexObstacle c : obstacleList) {
+                if (c.getStartTile().distanceTo(ctx.players.local().tile()) < 12 && c.getStartTile().matrix(ctx).reachable()) {
+                    if (c.getEndTile().distanceTo(d) < 12) {
+                        if (c.getStartTile().matrix(ctx).reachable()) {
                             co = c;
                             break;
                         }
                     }
+                } else {
+                    if (c.isReversible() && c.getEndTile().distanceTo(ctx.players.local().tile()) < 12 && c.getEndTile().matrix(ctx).reachable()) {
+                        if (c.getStartTile().distanceTo(d) < 12) {
+                            if (c.getEndTile().matrix(ctx).reachable()) {
+                                co = c;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
-        }
 
-        if(co != null){
+            if (co != null) {
 
-            if(co.getAgilityLevel() > ctx.skills.level(Constants.SKILLS_AGILITY)){
-                return false;
-            }
+                if (co.getAgilityLevel() > ctx.skills.level(Constants.SKILLS_AGILITY)) {
+                    return false;
+                }
 
-            Tile start;
-            int type;
+                Tile start;
+                int type;
 
-            if(co.getStartTile().matrix(ctx).reachable()){
-                start = co.getStartTile();
-                type = -1;
-            }else{
-                start = co.getEndTile();
-                type = 1;
-            }
+                if (co.getStartTile().matrix(ctx).reachable()) {
+                    start = co.getStartTile();
+                    type = -1;
+                } else {
+                    start = co.getEndTile();
+                    type = 1;
+                }
 
-            //Checking distance to start of obstacle
-            if(start.distanceTo(ctx.players.local().tile()) < 12 && start.matrix(ctx).reachable()){
+                //Checking distance to start of obstacle
+                if (start.distanceTo(ctx.players.local().tile()) < 12 && start.matrix(ctx).reachable()) {
 
-                GameObject GO = ctx.objects.select().id(co.getID()).nearest().poll();
-                turnToObject(GO);
+                    GameObject GO = ctx.objects.select().id(co.getID()).nearest().poll();
+                    turnToObject(GO);
 
-                if(GO.inViewport()){
-                    GO.bounds(co.getBounds(type));
-                    GO.interact(co.getInteraction());
-                    return handlePostInteraction();
+                    if (GO.inViewport()) {
+                        GO.bounds(co.getBounds(type));
+                        GO.interact(co.getInteraction());
+                        return handlePostInteraction();
+                    }
                 }
             }
         }
@@ -428,22 +444,23 @@ public class STWalker {
          * These are unique objects such as spirit trees, that require a different function
          * as they have custom code in order to work
          */
-
-        for(TierThreeObstacle CO: tierThreeList){
-            if(CO instanceof SpiritTreeObstacle){
-                if(d.distanceTo(CO.getEndTile()) < 4){
-                    if(reachable(ctx.objects.select().name("Spirit tree").poll())){
-                        turnToObject(ctx.objects.select().name("Spirit tree").poll());
-                        return CO.traverse();
+        if(tierThree) {
+            for (TierThreeObstacle CO : tierThreeList) {
+                if (CO instanceof SpiritTreeObstacle) {
+                    if (d.distanceTo(CO.getEndTile()) < 4) {
+                        if (reachable(ctx.objects.select().name("Spirit tree").poll())) {
+                            turnToObject(ctx.objects.select().name("Spirit tree").poll());
+                            return CO.traverse();
+                        }
                     }
                 }
-            }
 
-            if(CO instanceof FollowElkoy){
-                if(d.distanceTo(CO.getEndTile()) < 7){
-                    if(ctx.npcs.select().id(((FollowElkoy) CO).getElkoyID()).poll().tile().matrix(ctx).reachable()){
-                        turnToObject(ctx.npcs.select().id(((FollowElkoy) CO).getElkoyID()).poll());
-                        return CO.traverse();
+                if (CO instanceof FollowElkoy) {
+                    if (d.distanceTo(CO.getEndTile()) < 7) {
+                        if (ctx.npcs.select().id(((FollowElkoy) CO).getElkoyID()).poll().tile().matrix(ctx).reachable()) {
+                            turnToObject(ctx.npcs.select().id(((FollowElkoy) CO).getElkoyID()).poll());
+                            return CO.traverse();
+                        }
                     }
                 }
             }
@@ -452,30 +469,31 @@ public class STWalker {
         /*
          * Tier Four
          */
-
-        for(TierFour tf: tierFourList){
-            if(tf instanceof Jewelry){
-                if(tf.getEndTile().distanceTo(d) < 7){
-                    ctx.game.tab(Game.Tab.EQUIPMENT);
-                    if(ctx.equipment.itemAt(((Jewelry) tf).getSlot()).name().contains(((Jewelry) tf).getName())){
-                        ctx.equipment.itemAt(((Jewelry) tf).getSlot()).interact(tf.getInteraction());
-                        Condition.wait(() -> d.distanceTo(ctx.players.local().tile()) < 8, 250, 8);
-                        ctx.game.tab(Game.Tab.INVENTORY);
-                        return true;
-                    }
-                }
-            }else if(tf instanceof Teleport){
-                if(tf.getEndTile().distanceTo(d) < 10){
-                    if(((Teleport) tf).getTeletabID() == -1){
-                        if(((Teleport) tf).hasRunes()){
-                            ctx.game.tab(Game.Tab.MAGIC);
-                            ctx.magic.cast(((Teleport) tf).getSpell());
-                            Condition.wait(() -> d.distanceTo(ctx.players.local().tile()) < 10, 250, 8);
+        if(tierFour) {
+            for (TierFour tf : tierFourList) {
+                if (tf instanceof Jewelry) {
+                    if (tf.getEndTile().distanceTo(d) < 7) {
+                        ctx.game.tab(Game.Tab.EQUIPMENT);
+                        if (ctx.equipment.itemAt(((Jewelry) tf).getSlot()).name().contains(((Jewelry) tf).getName())) {
+                            ctx.equipment.itemAt(((Jewelry) tf).getSlot()).interact(tf.getInteraction());
+                            Condition.wait(() -> d.distanceTo(ctx.players.local().tile()) < 8, 250, 8);
                             ctx.game.tab(Game.Tab.INVENTORY);
+                            return true;
                         }
-                    }else{
-                        ctx.inventory.select().id(((Teleport) tf).getTeletabID()).poll().interact("Break");
-                        Condition.wait(() -> d.distanceTo(ctx.players.local().tile()) < 10, 250, 8);
+                    }
+                } else if (tf instanceof Teleport) {
+                    if (tf.getEndTile().distanceTo(d) < 10) {
+                        if (((Teleport) tf).getTeletabID() == -1) {
+                            if (((Teleport) tf).hasRunes()) {
+                                ctx.game.tab(Game.Tab.MAGIC);
+                                ctx.magic.cast(((Teleport) tf).getSpell());
+                                Condition.wait(() -> d.distanceTo(ctx.players.local().tile()) < 10, 250, 8);
+                                ctx.game.tab(Game.Tab.INVENTORY);
+                            }
+                        } else {
+                            ctx.inventory.select().id(((Teleport) tf).getTeletabID()).poll().interact("Break");
+                            Condition.wait(() -> d.distanceTo(ctx.players.local().tile()) < 10, 250, 8);
+                        }
                     }
                 }
             }
