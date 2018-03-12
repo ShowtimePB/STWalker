@@ -9,10 +9,10 @@ import org.powerbot.script.rt4.TileMatrix;
 
 import java.awt.*;
 
-@Script.Manifest(
-        name = "STWalker",
-        description = "Walking Test",
-        properties = "author=ShowtimeScripts; topic=0; client=4;")
+//@Script.Manifest(
+//        name = "STWalker",
+//        description = "Walking Test",
+//        properties = "author=ShowtimeScripts; topic=0; client=4;")
 
 public class WalkerTest extends PollingScript<ClientContext> implements PaintListener{
 
