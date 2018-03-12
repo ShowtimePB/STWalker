@@ -465,7 +465,7 @@ public class STWalker {
                     }
                 }
             }else if(tf instanceof Teleport){
-                if(tf.getEndTile().distanceTo(d) < 7){
+                if(tf.getEndTile().distanceTo(d) < 10){
                     if(((Teleport) tf).getTeletabID() == -1){
                         if(((Teleport) tf).hasRunes()){
                             ctx.game.tab(Game.Tab.MAGIC);
@@ -570,9 +570,18 @@ public class STWalker {
          * Beginning of fourth tier
          */
 
+        final int LAW_RUNE_ID = 563;
+        final int AIR_RUNE_ID = 556;
+        final int FIRE_RUNE_ID = 554;
+        final int WATER_RUNE_ID = 555;
+        final int EARTH_RUNE_ID = 557;
+
+
         Jewelry duelArena = new Jewelry(new Tile(3315, 3235), "Duel Arena", ctx, Equipment.Slot.RING, "Ring of duel");
+        Teleport varrockSpell = new Teleport(new Tile(3212, 3426), "", ctx, Magic.Spell.VARROCK_TELEPORT, new int[]{LAW_RUNE_ID, AIR_RUNE_ID, FIRE_RUNE_ID}, new int[]{1, 3, 1});
 
         tierFourList.add(duelArena);
+        tierFourList.add(varrockSpell);
     }
 
     private void turnToObject(GameObject GO){
